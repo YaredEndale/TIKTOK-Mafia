@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { authenticateRequest } from '@/lib/auth/auth-helper';
 import { assignRoles, calculatePhaseTimers, asGameConfiguration } from '@/lib/game-engine';
+import { broadcastPhaseChange, broadcastPrivateRole } from '@/lib/realtime';
 
 export async function POST(
   req: NextRequest,
@@ -96,6 +97,34 @@ export async function POST(
         visibility: 'PUBLIC',
       },
     ]);
+
+    // 6. Broadcast Realtime WebSocket Updates
+    broadcastPhaseChange(game.id, {
+      phase: 'NIGHT',
+      round: 1,
+      phaseStartedAt: timers.phaseStartedAt,
+      phaseEndsAt: timers.phaseEndsAt,
+      durationSeconds: timers.durationSeconds,
+    }).then();
+
+    // Broadcast private roles to player sessions
+    adminClient
+      .from('player_sessions')
+      .select('id, player_id')
+      .in('player_id', playerIds)
+      .then(({ data: sessions }) => {
+        if (sessions) {
+          const mafiaPlayers = players
+            .filter((p) => roleMap[p.id] === 'MAFIA')
+            .map((p) => ({ id: p.id, display_name: p.display_name }));
+
+          sessions.forEach((s) => {
+            const role = roleMap[s.player_id];
+            const teammates = role === 'MAFIA' ? mafiaPlayers.filter((m) => m.id !== s.player_id) : undefined;
+            broadcastPrivateRole(s.id, { role, teammates }).then();
+          });
+        }
+      });
 
     return NextResponse.json({ success: true, game: updatedGame });
   } catch (err: unknown) {

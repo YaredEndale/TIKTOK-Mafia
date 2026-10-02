@@ -13,6 +13,7 @@ import {
   GamePhase,
   GameConfiguration,
 } from '@/lib/game-engine';
+import { broadcastPhaseChange, broadcastPlayerEliminated } from '@/lib/realtime';
 import { Json } from '@/types/database.types';
 
 export async function POST(
@@ -222,6 +223,13 @@ export async function POST(
             visibility: 'PUBLIC',
           },
         ]);
+
+        broadcastPlayerEliminated(game.id, {
+          playerId: voteRes.eliminatedPlayerId,
+          displayName: victim?.display_name || 'Player',
+          reason: 'VOTE_EXECUTION',
+          revealedRole: victim?.role || null,
+        }).then();
       }
     }
 
@@ -283,6 +291,16 @@ export async function POST(
       } as unknown as Json,
       visibility: 'PUBLIC',
     });
+
+    // Broadcast Realtime Phase Change
+    broadcastPhaseChange(game.id, {
+      phase: finalPhase,
+      round: nextRound,
+      phaseStartedAt: timers.phaseStartedAt,
+      phaseEndsAt: timers.phaseEndsAt,
+      durationSeconds: timers.durationSeconds,
+    }).then();
+
 
     return NextResponse.json({
       success: true,

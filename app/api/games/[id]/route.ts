@@ -9,6 +9,7 @@ import {
   PlayerPrivateState,
   PublicGameState,
 } from '@/lib/game-engine';
+import { broadcastTimerSync } from '@/lib/realtime';
 import { Json } from '@/types/database.types';
 
 export async function GET(
@@ -255,6 +256,11 @@ export async function PATCH(
         },
         visibility: 'PUBLIC',
       });
+
+      broadcastTimerSync(game.id, {
+        phaseEndsAt: newEndsAt,
+        addedSeconds: additionalSeconds,
+      }).then();
     }
 
     // Config Update

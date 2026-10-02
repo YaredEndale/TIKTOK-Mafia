@@ -8,6 +8,7 @@ import {
   resolveVotes,
   validateVotingSubmission,
 } from '@/lib/game-engine';
+import { broadcastVoteCountUpdate } from '@/lib/realtime';
 
 export async function POST(
   req: NextRequest,
@@ -92,6 +93,20 @@ export async function POST(
       metadata: { round: game.round },
       visibility: 'PUBLIC',
     });
+
+    // Broadcast Realtime Vote Progress
+    adminClient
+      .from('votes')
+      .select('*', { count: 'exact', head: true })
+      .eq('game_id', game.id)
+      .eq('round', game.round)
+      .then(({ count }) => {
+        const aliveCount = players.filter((p) => p.status === 'ALIVE').length;
+        broadcastVoteCountUpdate(game.id, {
+          totalVotesCast: count || 0,
+          alivePlayersCount: aliveCount,
+        }).then();
+      });
 
     return NextResponse.json({ success: true, vote });
   } catch (err: unknown) {

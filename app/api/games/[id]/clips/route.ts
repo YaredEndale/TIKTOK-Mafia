@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { authenticateRequest } from '@/lib/auth/auth-helper';
-import { CLIP_CATEGORIES, ClipCategory } from '@/lib/game-engine';
+import { CLIP_CATEGORIES, ClipCategory, ClipMarker } from '@/lib/game-engine';
+import { broadcastClipMarked } from '@/lib/realtime';
 
 export async function POST(
   req: NextRequest,
@@ -56,6 +57,8 @@ export async function POST(
       },
       visibility: 'PUBLIC',
     });
+
+    broadcastClipMarked(gameId, clip as unknown as ClipMarker).then();
 
     return NextResponse.json({ success: true, clip });
   } catch (err: unknown) {

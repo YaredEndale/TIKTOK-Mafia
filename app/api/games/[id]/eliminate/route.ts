@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { authenticateRequest } from '@/lib/auth/auth-helper';
 import { checkWinCondition } from '@/lib/game-engine';
+import { broadcastPlayerEliminated } from '@/lib/realtime';
 
 export async function POST(
   req: NextRequest,
@@ -76,6 +77,15 @@ export async function POST(
         visibility: 'PUBLIC',
       },
     ]);
+
+    broadcastPlayerEliminated(gameId, {
+      playerId,
+      displayName: player.display_name,
+      reason: eliminationReason,
+      revealedRole: player.role as 'MAFIA' | 'DETECTIVE' | 'DOCTOR' | 'CITIZEN' | null,
+    }).then();
+
+
 
     // 3. Check Win Condition
     const { data: allPlayers } = await adminClient
