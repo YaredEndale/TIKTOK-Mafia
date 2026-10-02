@@ -34,7 +34,7 @@ describe('Phase 09 — Deployment & Production Readiness Validation', () => {
 
     // Check OBS overlay headers (frame-ancestors allows embedding into OBS browser source)
     const liveHeaderRule = vercelConfig.headers.find(
-      (h: { source: string }) => h.source === '/live/(.*)'
+      (h: { source: string }) => h.source === '/live/:path*' || h.source === '/live/(.*)'
     );
     expect(liveHeaderRule).toBeDefined();
     const cspHeader = liveHeaderRule.headers.find(
@@ -45,7 +45,7 @@ describe('Phase 09 — Deployment & Production Readiness Validation', () => {
 
     // Check API cache-control headers (prevent stale responses for real-time game APIs)
     const apiHeaderRule = vercelConfig.headers.find(
-      (h: { source: string }) => h.source === '/api/(.*)'
+      (h: { source: string }) => h.source === '/api/:path*' || h.source === '/api/(.*)'
     );
     expect(apiHeaderRule).toBeDefined();
     const cacheHeader = apiHeaderRule.headers.find(
