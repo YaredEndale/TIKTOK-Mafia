@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { authenticateRequest } from '@/lib/auth/auth-helper';
 import { assignRoles, calculatePhaseTimers, asGameConfiguration } from '@/lib/game-engine';
-import { broadcastPhaseChange, broadcastPrivateRole } from '@/lib/realtime';
+import { broadcastPhaseChange, broadcastPrivateRole } from '@/lib/realtime/broadcaster';
 
 export async function POST(
   req: NextRequest,

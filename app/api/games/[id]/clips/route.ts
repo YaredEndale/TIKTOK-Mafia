@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { authenticateRequest } from '@/lib/auth/auth-helper';
 import { CLIP_CATEGORIES, ClipCategory, ClipMarker } from '@/lib/game-engine';
-import { broadcastClipMarked } from '@/lib/realtime';
+import { broadcastClipMarked } from '@/lib/realtime/broadcaster';
 
 export async function POST(
   req: NextRequest,

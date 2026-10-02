@@ -9,7 +9,7 @@ import {
   PlayerPrivateState,
   PublicGameState,
 } from '@/lib/game-engine';
-import { broadcastTimerSync } from '@/lib/realtime';
+import { broadcastTimerSync } from '@/lib/realtime/broadcaster';
 import { Json } from '@/types/database.types';
 
 export async function GET(

@@ -13,7 +13,7 @@ import {
   GamePhase,
   GameConfiguration,
 } from '@/lib/game-engine';
-import { broadcastPhaseChange, broadcastPlayerEliminated } from '@/lib/realtime';
+import { broadcastPhaseChange, broadcastPlayerEliminated } from '@/lib/realtime/broadcaster';
 import { Json } from '@/types/database.types';
 
 export async function POST(

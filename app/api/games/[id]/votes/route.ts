@@ -8,7 +8,7 @@ import {
   resolveVotes,
   validateVotingSubmission,
 } from '@/lib/game-engine';
-import { broadcastVoteCountUpdate } from '@/lib/realtime';
+import { broadcastVoteCountUpdate } from '@/lib/realtime/broadcaster';
 
 export async function POST(
   req: NextRequest,

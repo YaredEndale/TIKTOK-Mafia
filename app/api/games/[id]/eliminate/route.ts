@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { authenticateRequest } from '@/lib/auth/auth-helper';
 import { checkWinCondition } from '@/lib/game-engine';
-import { broadcastPlayerEliminated } from '@/lib/realtime';
+import { broadcastPlayerEliminated } from '@/lib/realtime/broadcaster';
 
 export async function POST(
   req: NextRequest,

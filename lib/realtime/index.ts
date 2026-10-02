@@ -1,8 +1,8 @@
 /**
- * TikTok LIVE Mafia — Realtime Module
- * Public barrel export for realtime channels, broadcaster, and subscriptions.
+ * TikTok LIVE Mafia — Realtime Client-Safe Barrel
+ * Exports channel contracts and client subscription listeners.
+ * (Server broadcaster is in ./broadcaster to prevent server imports in client bundles)
  */
 
 export * from './channels';
-export * from './broadcaster';
 export * from './subscriptions';
