@@ -9,6 +9,7 @@ import {
   validateVotingSubmission,
   validateNightActionSubmission,
   checkWinCondition,
+  GamePhase,
   Player,
   ROLE_DISTRIBUTIONS,
   NightAction,
@@ -40,7 +41,7 @@ describe('Phase 08 — End-to-End Live Game Simulation & DoD Validation', () => 
 
     // 2. FSM Progression to Game Start:
     // LOBBY -> PLAYER_SELECTION -> ROLE_ASSIGNMENT -> NIGHT (Round 1)
-    let currentPhase = 'LOBBY' as const;
+    let currentPhase: GamePhase = 'LOBBY';
     let round = 0;
 
     let next = getNextPhase(currentPhase, { round });
