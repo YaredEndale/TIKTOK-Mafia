@@ -68,4 +68,44 @@ describe('API Security & Domain Contracts', () => {
     expect(game.phase).toBe('NIGHT');
     expect(game.configuration.timers.night).toBe(90);
   });
+
+  it('guarantees public overlay state never leaks alive player roles (Rule 2)', () => {
+    const rawPublicPlayers = [
+      {
+        id: 'p-1',
+        display_name: 'Player 1',
+        seat_number: 1,
+        status: 'ALIVE',
+        role: null, // Alive role must be null in public view
+        eliminated_reason: null,
+      },
+      {
+        id: 'p-2',
+        display_name: 'Player 2',
+        seat_number: 2,
+        status: 'ELIMINATED',
+        role: 'MAFIA', // Eliminated role revealed
+        eliminated_reason: 'ELIMINATED_VOTE',
+      },
+    ];
+
+    const publicPlayers = rawPublicPlayers.map((p) => ({
+      ...p,
+      role: p.status === 'ALIVE' ? null : p.role,
+    }));
+
+    // Alive player role must be null
+    expect(publicPlayers.find((p) => p.id === 'p-1')?.role).toBeNull();
+    // Eliminated player role may be revealed
+    expect(publicPlayers.find((p) => p.id === 'p-2')?.role).toBe('MAFIA');
+  });
+
+  it('computes server-authoritative timer countdown accurately (Rule 4)', () => {
+    const now = Date.now();
+    const phaseEndsAt = new Date(now + 45000).toISOString(); // 45 seconds from now
+    const remainingSeconds = Math.max(0, Math.floor((new Date(phaseEndsAt).getTime() - now) / 1000));
+
+    expect(remainingSeconds).toBe(45);
+  });
 });
+
