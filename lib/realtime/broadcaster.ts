@@ -136,3 +136,18 @@ export async function broadcastClipMarked(
     clip as unknown as Record<string, unknown>
   );
 }
+
+/**
+ * Broadcasts a live text announcement to the stream overlay and game channels.
+ */
+export async function broadcastAnnouncement(
+  gameId: string,
+  announcement: { id: string; message: string; timestamp: string; author?: string }
+): Promise<void> {
+  await Promise.all([
+    sendBroadcast(CHANNELS.overlay(gameId), REALTIME_EVENTS.ANNOUNCEMENT, announcement),
+    sendBroadcast(CHANNELS.game(gameId), REALTIME_EVENTS.ANNOUNCEMENT, announcement),
+    sendBroadcast(CHANNELS.moderator(gameId), REALTIME_EVENTS.ANNOUNCEMENT, announcement),
+  ]);
+}
+

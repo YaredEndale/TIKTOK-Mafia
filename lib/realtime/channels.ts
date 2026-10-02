@@ -26,6 +26,7 @@ export const REALTIME_EVENTS = {
   NIGHT_RESOLVED: 'night_resolved',
   GAME_OVER: 'game_over',
   CLIP_MARKED: 'clip_marked',
+  ANNOUNCEMENT: 'announcement',
 
   // Private Player Events (player:*)
   ROLE_ASSIGNED: 'role_assigned',

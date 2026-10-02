@@ -29,6 +29,10 @@ export default function LiveOverlayPage({ params }: { params: { gameCode: string
     role: PlayerRole | null;
     reason: string;
   } | null>(null);
+  const [liveAnnouncement, setLiveAnnouncement] = useState<{
+    message: string;
+    author?: string;
+  } | null>(null);
 
   // 1. Fetch Public Game Snapshot (Rule 2: Zero role leak)
   const fetchOverlaySnapshot = useCallback(async () => {
@@ -108,6 +112,14 @@ export default function LiveOverlayPage({ params }: { params: { gameCode: string
 
         fetchOverlaySnapshot();
       },
+      onAnnouncement: (payload) => {
+        setLiveAnnouncement({
+          message: payload.message,
+          author: payload.author,
+        });
+        // Auto-dismiss after 12 seconds
+        setTimeout(() => setLiveAnnouncement(null), 12000);
+      },
       onReconnect: () => {
         fetchOverlaySnapshot();
       },
@@ -161,6 +173,40 @@ export default function LiveOverlayPage({ params }: { params: { gameCode: string
         phase={gameState.phase}
         round={gameState.round}
       />
+
+      {/* Live Producer Announcement Ticker */}
+      {liveAnnouncement && (
+        <div
+          className="overlay-card pulse-animation"
+          style={{
+            width: '100%',
+            padding: '14px 20px',
+            marginBottom: 20,
+            background: 'rgba(255, 42, 95, 0.18)',
+            border: '2px solid rgba(255, 42, 95, 0.6)',
+            boxShadow: '0 0 25px var(--role-mafia-glow)',
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>📢</span>
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 900,
+                letterSpacing: '1.5px',
+                color: 'var(--role-mafia)',
+                textTransform: 'uppercase',
+              }}
+            >
+              HOST ANNOUNCEMENT
+            </span>
+          </div>
+          <p style={{ fontSize: 18, fontWeight: 800, color: '#ffffff', marginTop: 4 }}>
+            {liveAnnouncement.message}
+          </p>
+        </div>
+      )}
 
       {/* Main Content Area Driven by Game State */}
       <div

@@ -25,6 +25,7 @@ export interface GameChannelCallbacks {
   onTimerSync?: (payload: TimerSyncPayload) => void;
   onPlayerEliminated?: (payload: PlayerEliminatedPayload) => void;
   onVoteCountUpdate?: (payload: VoteCountUpdatePayload) => void;
+  onAnnouncement?: (payload: { id: string; message: string; timestamp: string; author?: string }) => void;
   onReconnect?: () => void;
   onStatusChange?: (status: SubscriptionStatus['status']) => void;
 }
@@ -70,6 +71,9 @@ export function subscribeToGameChannel(
     })
     .on('broadcast', { event: REALTIME_EVENTS.VOTE_COUNT_UPDATE }, (payload) => {
       callbacks.onVoteCountUpdate?.(payload.payload as VoteCountUpdatePayload);
+    })
+    .on('broadcast', { event: REALTIME_EVENTS.ANNOUNCEMENT }, (payload) => {
+      callbacks.onAnnouncement?.(payload.payload as { id: string; message: string; timestamp: string; author?: string });
     });
 
   // Listen to postgres_changes on games table as backup sync
