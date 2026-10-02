@@ -226,6 +226,17 @@ export default function ModeratorDashboardPage({ params }: { params: { gameId: s
     if (res.ok) fetchDashboardData();
   };
 
+  const handleRestartGame = async () => {
+    if (!game) return;
+    const res = await fetch(`/api/games/${game.id}/restart`, {
+      method: 'POST',
+      headers: authHeaders,
+    });
+    const data = await res.json();
+    if (!res.ok) alert(data.error || 'Failed to restart game');
+    else fetchDashboardData();
+  };
+
 
   const copyLink = (type: 'player' | 'overlay') => {
     if (!game) return;
@@ -343,6 +354,7 @@ export default function ModeratorDashboardPage({ params }: { params: { gameId: s
             onAdvancePhase={handleAdvancePhase}
             onExtendTimer={handleExtendTimer}
             onEndGame={handleEndGame}
+            onRestartGame={handleRestartGame}
           />
 
           {(game.phase === 'VOTING' || game.phase === 'REVEAL') && (

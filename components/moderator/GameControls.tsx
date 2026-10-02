@@ -12,6 +12,7 @@ interface GameControlsProps {
   onAdvancePhase: (targetPhase?: GamePhase, isOverride?: boolean) => Promise<void>;
   onExtendTimer: (seconds: number) => Promise<void>;
   onEndGame: () => Promise<void>;
+  onRestartGame?: () => Promise<void>;
 }
 
 export const GameControls: React.FC<GameControlsProps> = ({
@@ -23,6 +24,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
   onAdvancePhase,
   onExtendTimer,
   onEndGame,
+  onRestartGame,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [overridePhase, setOverridePhase] = useState<GamePhase | ''>('');
@@ -150,10 +152,27 @@ export const GameControls: React.FC<GameControlsProps> = ({
 
       case 'GAME_OVER':
         return (
-          <div style={{ textAlign: 'center', padding: '10px 0' }}>
-            <span className="badge" style={{ background: 'rgba(0,245,155,0.15)', color: '#00f59b', fontSize: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'center' }}>
+            <span className="badge" style={{ background: 'rgba(0,245,155,0.15)', color: '#00f59b', fontSize: 15, padding: '8px 16px' }}>
               🏆 GAME CONCLUDED ({game.winner || 'DRAW'})
             </span>
+            {onRestartGame && (
+              <button
+                onClick={() => handleAction(onRestartGame)}
+                disabled={isProcessing}
+                className="btn-primary"
+                style={{
+                  minHeight: 52,
+                  fontSize: 16,
+                  background: 'linear-gradient(135deg, #00f59b 0%, #0091ea 100%)',
+                  color: '#000',
+                  fontWeight: 800,
+                  boxShadow: '0 4px 20px rgba(0,245,155,0.3)',
+                }}
+              >
+                🔄 REMATCH / RESTART (KEEP PLAYERS)
+              </button>
+            )}
           </div>
         );
 
@@ -275,6 +294,30 @@ export const GameControls: React.FC<GameControlsProps> = ({
             Apply
           </button>
         </div>
+
+        {onRestartGame && game.phase !== 'LOBBY' && (
+          <button
+            onClick={() => {
+              if (confirm('Restart game back to lobby with current players?')) handleAction(onRestartGame);
+            }}
+            disabled={isProcessing}
+            style={{
+              marginTop: 10,
+              width: '100%',
+              background: 'rgba(56, 189, 248, 0.1)',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              borderRadius: 'var(--radius-sm)',
+              color: '#38bdf8',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              padding: '8px 12px',
+              textAlign: 'center',
+            }}
+          >
+            🔄 Restart Game (Keep All Players)
+          </button>
+        )}
 
         {game.status === 'IN_PROGRESS' && (
           <button
