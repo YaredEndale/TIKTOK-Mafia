@@ -176,6 +176,20 @@ export function subscribeToModeratorChannel(
       callbacks.onClipMarked?.(payload.payload as Record<string, unknown>);
     });
 
+  // Listen to postgres_changes on players table so lobby roster updates live
+  channel.on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'players',
+      filter: `game_id=eq.${gameId}`,
+    },
+    () => {
+      callbacks.onReconnect?.();
+    }
+  );
+
   channel.subscribe((status) => {
     callbacks.onStatusChange?.(status);
     if (status === 'SUBSCRIBED') {

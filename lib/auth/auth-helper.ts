@@ -58,19 +58,55 @@ export async function authenticateRequest(req: NextRequest, gameId?: string): Pr
     // Ignore cookie read failures in non-cookie contexts
   }
 
-  // 1b. Check for Moderator Key fallback in development or admin API header
-  const moderatorHeader = req.headers.get('x-moderator-key');
-  if (
-    process.env.NODE_ENV === 'development' &&
-    moderatorHeader &&
-    moderatorHeader === process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    return {
-      isModerator: true,
-      moderatorId: 'dev-moderator',
-      playerId: null,
-      playerSessionId: null,
-    };
+  // 1b. Check for Moderator Token, Room Admin Key, or Service Role Key
+  const moderatorHeader = req.headers.get('x-moderator-token') || req.headers.get('x-moderator-key');
+  if (moderatorHeader) {
+    if (
+      process.env.SUPABASE_SERVICE_ROLE_KEY &&
+      moderatorHeader === process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return {
+        isModerator: true,
+        moderatorId: 'service-role',
+        playerId: null,
+        playerSessionId: null,
+      };
+    }
+
+    if (gameId && (moderatorHeader === gameId || req.cookies.get(`mod_${gameId}`)?.value === gameId)) {
+      const { data: validGame } = await adminClient
+        .from('games')
+        .select('id')
+        .eq('id', gameId)
+        .maybeSingle();
+
+      if (validGame) {
+        return {
+          isModerator: true,
+          moderatorId: `mod-${gameId}`,
+          playerId: null,
+          playerSessionId: null,
+        };
+      }
+    }
+  }
+
+  // Check room host cookie
+  if (gameId && req.cookies.get(`mod_${gameId}`)?.value === gameId) {
+    const { data: validGame } = await adminClient
+      .from('games')
+      .select('id')
+      .eq('id', gameId)
+      .maybeSingle();
+
+    if (validGame) {
+      return {
+        isModerator: true,
+        moderatorId: `mod-${gameId}`,
+        playerId: null,
+        playerSessionId: null,
+      };
+    }
   }
 
   // 2. Check for Player Session Token via 'x-player-token' or Authorization Bearer

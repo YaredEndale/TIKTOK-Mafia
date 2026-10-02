@@ -39,30 +39,62 @@ export default function ModeratorDashboardPage({ params }: { params: { gameId: s
   // 1. Fetch Complete Moderator Snapshot
   const fetchDashboardData = useCallback(async () => {
     try {
+      const authHeaders = {
+        'x-moderator-token': gameId,
+        'x-moderator-key': gameId,
+      };
+
       // Fetch game state
       const res = await fetch(`/api/games/${gameId}`, {
-        headers: { 'x-moderator-key': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '' },
+        headers: authHeaders,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load game');
 
-      setGame(data.game);
-      setPlayers(data.players || []);
+      // Normalize game object (supports both MODERATOR view with .id and PUBLIC view with .gameId)
+      const resolvedGameId = data.game?.id || data.game?.gameId || gameId;
+      const gameRecord: Game = {
+        ...data.game,
+        id: resolvedGameId,
+      };
+      setGame(gameRecord);
+
+      // Fetch dedicated players roster
+      try {
+        const playersRes = await fetch(`/api/games/${resolvedGameId}/players`, {
+          headers: authHeaders,
+        });
+        if (playersRes.ok) {
+          const playersData = await playersRes.json();
+          setPlayers(playersData.players || []);
+        } else {
+          setPlayers(data.players || data.game?.players || []);
+        }
+      } catch {
+        setPlayers(data.players || data.game?.players || []);
+      }
+
       setCurrentNightActions(data.currentRoundNightActions || []);
 
       // Fetch events
-      const eventsRes = await fetch(`/api/games/${data.game.id}/events`);
+      const eventsRes = await fetch(`/api/games/${resolvedGameId}/events`, {
+        headers: authHeaders,
+      });
       const eventsData = await eventsRes.json();
       if (eventsData.events) setEvents(eventsData.events);
 
       // Fetch clips
-      const clipsRes = await fetch(`/api/games/${data.game.id}/clips`);
+      const clipsRes = await fetch(`/api/games/${resolvedGameId}/clips`, {
+        headers: authHeaders,
+      });
       const clipsData = await clipsRes.json();
       if (clipsData.clips) setClips(clipsData.clips);
 
       // Fetch votes if voting/reveal phase
       if (data.game.phase === 'VOTING' || data.game.phase === 'REVEAL') {
-        const votesRes = await fetch(`/api/games/${data.game.id}/votes`);
+        const votesRes = await fetch(`/api/games/${resolvedGameId}/votes`, {
+          headers: authHeaders,
+        });
         const votesData = await votesRes.json();
         if (votesData.tally) {
           setVotingTallies(votesData.tally.tallies || []);
@@ -77,9 +109,14 @@ export default function ModeratorDashboardPage({ params }: { params: { gameId: s
     }
   }, [gameId]);
 
-  // 2. Realtime Subscriptions
+  // 2. Realtime Subscriptions & Polling Fallback
   useEffect(() => {
     fetchDashboardData();
+
+    // 3-second live sync interval so newly joined players appear immediately
+    const pollInterval = setInterval(() => {
+      fetchDashboardData();
+    }, 3000);
 
     const channel = subscribeToModeratorChannel(gameId, {
       onPhaseChange: () => {
@@ -101,14 +138,24 @@ export default function ModeratorDashboardPage({ params }: { params: { gameId: s
     });
 
     return () => {
+      clearInterval(pollInterval);
       channel.unsubscribe();
     };
   }, [gameId, fetchDashboardData]);
 
   // 3. Moderator Actions
+  const authHeaders = {
+    'Content-Type': 'application/json',
+    'x-moderator-token': gameId,
+    'x-moderator-key': gameId,
+  };
+
   const handleStartGame = async () => {
     if (!game) return;
-    const res = await fetch(`/api/games/${game.id}/start`, { method: 'POST' });
+    const res = await fetch(`/api/games/${game.id}/start`, {
+      method: 'POST',
+      headers: authHeaders,
+    });
     const data = await res.json();
     if (!res.ok) alert(data.error || 'Failed to start game');
     else fetchDashboardData();
@@ -118,7 +165,7 @@ export default function ModeratorDashboardPage({ params }: { params: { gameId: s
     if (!game) return;
     const res = await fetch(`/api/games/${game.id}/phase/start`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders,
       body: JSON.stringify({ targetPhase, isModeratorOverride: isOverride }),
     });
     const data = await res.json();
@@ -130,7 +177,7 @@ export default function ModeratorDashboardPage({ params }: { params: { gameId: s
     if (!game) return;
     const res = await fetch(`/api/games/${game.id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders,
       body: JSON.stringify({ action: 'EXTEND_TIMER', additionalSeconds: seconds }),
     });
     const data = await res.json();
@@ -142,7 +189,7 @@ export default function ModeratorDashboardPage({ params }: { params: { gameId: s
     if (!game) return;
     const res = await fetch(`/api/games/${game.id}/eliminate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders,
       body: JSON.stringify({ playerId, reason }),
     });
     const data = await res.json();
@@ -151,7 +198,10 @@ export default function ModeratorDashboardPage({ params }: { params: { gameId: s
   };
 
   const handleRemovePlayer = async (playerId: string) => {
-    const res = await fetch(`/api/players/${playerId}/remove`, { method: 'POST' });
+    const res = await fetch(`/api/players/${playerId}/remove`, {
+      method: 'POST',
+      headers: authHeaders,
+    });
     const data = await res.json();
     if (!res.ok) alert(data.error || 'Failed to remove player');
     else fetchDashboardData();
@@ -161,7 +211,7 @@ export default function ModeratorDashboardPage({ params }: { params: { gameId: s
     if (!game) return;
     const res = await fetch(`/api/games/${game.id}/clips`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders,
       body: JSON.stringify({ category, description }),
     });
     if (res.ok) fetchDashboardData();
@@ -169,7 +219,10 @@ export default function ModeratorDashboardPage({ params }: { params: { gameId: s
 
   const handleEndGame = async () => {
     if (!game) return;
-    const res = await fetch(`/api/games/${game.id}/end`, { method: 'POST' });
+    const res = await fetch(`/api/games/${game.id}/end`, {
+      method: 'POST',
+      headers: authHeaders,
+    });
     if (res.ok) fetchDashboardData();
   };
 

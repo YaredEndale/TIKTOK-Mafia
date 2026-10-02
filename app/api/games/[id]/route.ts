@@ -206,6 +206,7 @@ export async function GET(
     return NextResponse.json({
       view: 'PUBLIC',
       game: publicState,
+      players: publicState.players,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Internal Server Error';
