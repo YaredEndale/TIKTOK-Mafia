@@ -167,114 +167,127 @@ export default function LiveOverlayPage({ params }: { params: { gameCode: string
   // Render Phase Specific Layout
   return (
     <div className="overlay-viewport">
-      {/* Universal Top Header */}
-      <OverlayHeader
-        gameCode={gameState.code}
-        phase={gameState.phase}
-        round={gameState.round}
-      />
-
-      {/* Live Producer Announcement Ticker */}
-      {liveAnnouncement && (
-        <div
-          className="overlay-card pulse-animation"
-          style={{
-            width: '100%',
-            padding: '14px 20px',
-            marginBottom: 20,
-            background: 'rgba(255, 42, 95, 0.18)',
-            border: '2px solid rgba(255, 42, 95, 0.6)',
-            boxShadow: '0 0 25px var(--role-mafia-glow)',
-            textAlign: 'center',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <span style={{ fontSize: 18 }}>📢</span>
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 900,
-                letterSpacing: '1.5px',
-                color: 'var(--role-mafia)',
-                textTransform: 'uppercase',
-              }}
-            >
-              HOST ANNOUNCEMENT
-            </span>
-          </div>
-          <p style={{ fontSize: 18, fontWeight: 800, color: '#ffffff', marginTop: 4 }}>
-            {liveAnnouncement.message}
-          </p>
-        </div>
-      )}
-
-      {/* Main Content Area Driven by Game State */}
       <div
         style={{
-          flex: 1,
+          width: '100%',
+          maxWidth: 440,
+          margin: '0 auto',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          width: '100%',
+          flex: 1,
         }}
       >
-        {(gameState.phase === 'LOBBY' ||
-          gameState.phase === 'PLAYER_SELECTION' ||
-          gameState.phase === 'ROLE_ASSIGNMENT') && (
-          <LobbyOverlay
-            gameCode={gameState.code}
-            players={gameState.players}
-            maxPlayers={12}
-          />
+        {/* Universal Top Header */}
+        <OverlayHeader
+          gameCode={gameState.code}
+          phase={gameState.phase}
+          round={gameState.round}
+        />
+
+        {/* Live Producer Announcement Ticker */}
+        {liveAnnouncement && (
+          <div
+            className="overlay-card pulse-animation"
+            style={{
+              width: '100%',
+              padding: '14px 20px',
+              marginBottom: 20,
+              background: 'rgba(255, 42, 95, 0.18)',
+              border: '2px solid rgba(255, 42, 95, 0.6)',
+              boxShadow: '0 0 25px var(--role-mafia-glow)',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <span style={{ fontSize: 18 }}>📢</span>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 900,
+                  letterSpacing: '1.5px',
+                  color: 'var(--role-mafia)',
+                  textTransform: 'uppercase',
+                }}
+              >
+                HOST ANNOUNCEMENT
+              </span>
+            </div>
+            <p style={{ fontSize: 18, fontWeight: 800, color: '#ffffff', marginTop: 4 }}>
+              {liveAnnouncement.message}
+            </p>
+          </div>
         )}
 
-        {gameState.phase === 'NIGHT' && (
-          <NightOverlay
-            round={gameState.round}
-            phaseEndsAt={gameState.phaseEndsAt}
-            players={gameState.players}
-          />
-        )}
+        {/* Main Content Area Driven by Game State */}
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+          }}
+        >
+          {(gameState.phase === 'LOBBY' ||
+            gameState.phase === 'PLAYER_SELECTION' ||
+            gameState.phase === 'ROLE_ASSIGNMENT') && (
+            <LobbyOverlay
+              gameCode={gameState.code}
+              players={gameState.players}
+              maxPlayers={12}
+            />
+          )}
 
-        {(gameState.phase === 'DAY' || gameState.phase === 'DISCUSSION') && (
-          <DiscussionOverlay
-            round={gameState.round}
-            phaseEndsAt={gameState.phaseEndsAt}
-            players={gameState.players}
-            announcements={gameState.announcements}
-          />
-        )}
+          {gameState.phase === 'NIGHT' && (
+            <NightOverlay
+              round={gameState.round}
+              phaseEndsAt={gameState.phaseEndsAt}
+              players={gameState.players}
+            />
+          )}
 
-        {gameState.phase === 'VOTING' && (
-          <VotingOverlay
-            phaseEndsAt={gameState.phaseEndsAt}
-            players={gameState.players}
-            tallies={votingTallies}
-            totalVotesCast={totalVotesCast}
-          />
-        )}
+          {(gameState.phase === 'DAY' || gameState.phase === 'DISCUSSION') && (
+            <DiscussionOverlay
+              round={gameState.round}
+              phaseEndsAt={gameState.phaseEndsAt}
+              players={gameState.players}
+              announcements={gameState.announcements}
+            />
+          )}
 
-        {(gameState.phase === 'REVEAL' || gameState.phase === 'ELIMINATION') && (
-          <EliminationOverlay
-            player={
-              recentEliminatedPlayer?.player ||
-              gameState.players.find((p) => p.status === 'ELIMINATED') ||
-              null
-            }
-            revealedRole={recentEliminatedPlayer?.role || null}
-            reason={recentEliminatedPlayer?.reason || 'Eliminated by decision of the town'}
-            round={gameState.round}
-          />
-        )}
+          {gameState.phase === 'VOTING' && (
+            <VotingOverlay
+              phaseEndsAt={gameState.phaseEndsAt}
+              players={gameState.players}
+              tallies={votingTallies}
+              totalVotesCast={totalVotesCast}
+            />
+          )}
 
-        {gameState.phase === 'GAME_OVER' && (
-          <GameOverOverlay
-            winner={gameState.winner as GameWinner}
-            round={gameState.round}
-            players={gameState.players}
-          />
-        )}
+          {(gameState.phase === 'REVEAL' || gameState.phase === 'ELIMINATION') && (
+            <EliminationOverlay
+              player={
+                recentEliminatedPlayer?.player ||
+                gameState.players.find((p) => p.status === 'ELIMINATED') ||
+                null
+              }
+              revealedRole={recentEliminatedPlayer?.role || null}
+              reason={recentEliminatedPlayer?.reason || 'Eliminated by decision of the town'}
+              round={gameState.round}
+            />
+          )}
+
+          {gameState.phase === 'GAME_OVER' && (
+            <GameOverOverlay
+              winner={gameState.winner as GameWinner}
+              round={gameState.round}
+              players={gameState.players}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

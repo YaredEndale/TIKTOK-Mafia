@@ -14,30 +14,23 @@ export function LobbyOverlay({ gameCode, players, maxPlayers = 12 }: LobbyOverla
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mafia.chewata.com';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mafia-pi-one.vercel.app';
     const joinUrl = `${origin}/join/${gameCode}`;
 
     QRCode.toDataURL(joinUrl, {
-      width: 260,
+      width: 220,
       margin: 1,
       color: {
         dark: '#ffffff',
-        light: '#00000000', // Transparent background
+        light: '#00000000', // Transparent
       },
     })
       .then((url) => setQrCodeDataUrl(url))
       .catch((err) => console.error('Failed to generate QR code', err));
   }, [gameCode]);
 
-  // Generate slots for max players (5-12)
-  const slots = Array.from({ length: maxPlayers }).map((_, idx) => {
-    const seatNum = idx + 1;
-    const player = players.find((p) => p.seat_number === seatNum) || players[idx];
-    return {
-      seatNumber: seatNum,
-      player: player || null,
-    };
-  });
+  const minPlayers = 5;
+  const isReady = players.length >= minPlayers;
 
   return (
     <div
@@ -46,54 +39,44 @@ export function LobbyOverlay({ gameCode, players, maxPlayers = 12 }: LobbyOverla
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100%',
         width: '100%',
+        maxWidth: 420,
+        margin: '0 auto',
         textAlign: 'center',
       }}
     >
-      {/* Title & Brand Badge */}
-      <div style={{ marginBottom: 20 }}>
-        <span
-          className="badge"
-          style={{
-            background: 'var(--role-mafia-bg)',
-            color: 'var(--role-mafia)',
-            border: '1px solid rgba(255, 42, 95, 0.4)',
-            fontSize: 13,
-            padding: '6px 16px',
-            marginBottom: 12,
-          }}
-        >
-          🎭 SOCIAL DEDUCTION SHOW
-        </span>
+      {/* Title */}
+      <div style={{ marginBottom: 16 }}>
         <h1
           style={{
-            fontSize: 48,
+            fontSize: 40,
             fontWeight: 900,
-            letterSpacing: '-1px',
+            letterSpacing: '-0.5px',
             lineHeight: 1.1,
-            textShadow: '0 0 40px rgba(255, 255, 255, 0.25)',
+            textShadow: '0 0 30px rgba(255, 42, 95, 0.4)',
           }}
         >
           TIKTOK LIVE <span style={{ color: 'var(--role-mafia)' }}>MAFIA</span>
         </h1>
-        <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginTop: 6 }}>
-          Scan to join as a player on your phone!
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>
+          Scan QR to join as a player!
         </p>
       </div>
 
-      {/* Center QR Code Container */}
+      {/* QR Code & Room Code Card */}
       <div
         className="overlay-card"
         style={{
+          width: '100%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          padding: 24,
-          marginBottom: 28,
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '2px solid rgba(255, 42, 95, 0.4)',
+          padding: '20px 16px',
+          marginBottom: 20,
+          background: 'rgba(255, 255, 255, 0.04)',
+          border: '2px solid rgba(255, 42, 95, 0.5)',
           boxShadow: '0 0 35px var(--role-mafia-glow)',
+          borderRadius: 20,
         }}
       >
         {qrCodeDataUrl ? (
@@ -101,13 +84,13 @@ export function LobbyOverlay({ gameCode, players, maxPlayers = 12 }: LobbyOverla
           <img
             src={qrCodeDataUrl}
             alt="Join Game QR Code"
-            style={{ width: 180, height: 180, borderRadius: 12, marginBottom: 16 }}
+            style={{ width: 160, height: 160, borderRadius: 12, marginBottom: 12 }}
           />
         ) : (
           <div
             style={{
-              width: 180,
-              height: 180,
+              width: 160,
+              height: 160,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -118,17 +101,17 @@ export function LobbyOverlay({ gameCode, players, maxPlayers = 12 }: LobbyOverla
           </div>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <span style={{ fontSize: 13, color: 'var(--text-muted)', letterSpacing: '1px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '1px' }}>
             OR ENTER GAME CODE:
           </span>
           <span
             style={{
-              fontSize: 32,
+              fontSize: 36,
               fontWeight: 900,
-              letterSpacing: '4px',
+              letterSpacing: '5px',
               color: '#ffffff',
-              textShadow: '0 0 15px rgba(255, 255, 255, 0.5)',
+              textShadow: '0 0 20px rgba(255, 255, 255, 0.6)',
             }}
           >
             {gameCode}
@@ -136,89 +119,104 @@ export function LobbyOverlay({ gameCode, players, maxPlayers = 12 }: LobbyOverla
         </div>
       </div>
 
-      {/* Player Roster Grid */}
+      {/* Players Joined Roster (Shows ONLY Joined Players) */}
       <div style={{ width: '100%' }}>
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: 12,
+            marginBottom: 10,
             padding: '0 4px',
           }}
         >
-          <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-secondary)' }}>
-            LOBBY PLAYERS
+          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-secondary)' }}>
+            PLAYERS JOINED ({players.length}/{maxPlayers})
           </span>
           <span
             className="badge"
             style={{
-              background: players.length >= 5 ? 'var(--role-doctor-bg)' : 'rgba(255, 255, 255, 0.08)',
-              color: players.length >= 5 ? 'var(--role-doctor)' : 'var(--text-muted)',
-              fontSize: 12,
+              background: isReady ? 'var(--role-doctor-bg)' : 'rgba(255, 183, 3, 0.15)',
+              color: isReady ? 'var(--role-doctor)' : '#ffb703',
+              border: `1px solid ${isReady ? 'var(--role-doctor)' : '#ffb703'}40`,
+              fontSize: 11,
+              padding: '3px 10px',
             }}
           >
-            {players.length} / {maxPlayers} READY (MIN 5)
+            {isReady ? '✓ READY TO START' : `NEED ${minPlayers - players.length} MORE`}
           </span>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 10,
-          }}
-        >
-          {slots.map(({ seatNumber, player }) => (
-            <div
-              key={seatNumber}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 12px',
-                borderRadius: 14,
-                background: player ? 'rgba(0, 245, 155, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-                border: player
-                  ? '1px solid rgba(0, 245, 155, 0.35)'
-                  : '1px dashed rgba(255, 255, 255, 0.1)',
-                textAlign: 'left',
-              }}
-            >
+        {players.length === 0 ? (
+          <div
+            style={{
+              padding: '16px',
+              color: 'var(--text-muted)',
+              fontSize: 13,
+              background: 'rgba(255, 255, 255, 0.03)',
+              borderRadius: 12,
+              border: '1px dashed rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            Waiting for players to scan QR code...
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 8,
+              maxHeight: 240,
+              overflowY: 'auto',
+            }}
+          >
+            {players.map((player, idx) => (
               <div
+                key={player.id}
                 style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: '50%',
-                  background: player ? 'var(--role-doctor)' : 'rgba(255, 255, 255, 0.1)',
-                  color: player ? '#000000' : 'var(--text-muted)',
-                  fontSize: 12,
-                  fontWeight: 900,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
+                  gap: 8,
+                  padding: '8px 12px',
+                  borderRadius: 12,
+                  background: 'rgba(0, 245, 155, 0.12)',
+                  border: '1px solid rgba(0, 245, 155, 0.35)',
+                  textAlign: 'left',
                 }}
               >
-                {seatNumber}
-              </div>
-              <div style={{ overflow: 'hidden' }}>
-                <p
+                <div
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: '50%',
+                    background: 'var(--role-doctor)',
+                    color: '#000000',
+                    fontSize: 11,
+                    fontWeight: 900,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  {player.seat_number ?? idx + 1}
+                </div>
+                <span
                   style={{
                     fontSize: 13,
                     fontWeight: 700,
-                    color: player ? '#ffffff' : 'var(--text-muted)',
+                    color: '#ffffff',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                   }}
                 >
-                  {player ? player.display_name : 'Waiting...'}
-                </p>
+                  {player.display_name}
+                </span>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

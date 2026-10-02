@@ -40,12 +40,14 @@ export function OverlayHeader({ gameCode, phase, round }: OverlayHeaderProps) {
         alignItems: 'center',
         justifyContent: 'space-between',
         width: '100%',
-        marginBottom: 28,
-        padding: '12px 20px',
-        background: 'rgba(0, 0, 0, 0.45)',
+        maxWidth: 420,
+        margin: '0 auto 20px auto',
+        padding: '10px 16px',
+        background: 'rgba(0, 0, 0, 0.55)',
         backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
         borderRadius: '9999px',
+        boxSizing: 'border-box',
       }}
     >
       {/* Brand & Room Code */}
